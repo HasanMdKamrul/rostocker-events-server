@@ -58,7 +58,25 @@ app.post("/events", async (req, res) => {
     });
   }
 });
+
 // ** grab all the events happenning
+
+app.get("/events", async (req, res) => {
+  try {
+    const events = await eventCollection.find({}).toArray();
+
+    res.send({
+      success: true,
+      data: events,
+      message: "Event Retrived",
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 // ** app listen
 app.listen(port, () => {
