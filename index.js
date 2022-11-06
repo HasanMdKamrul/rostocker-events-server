@@ -1,5 +1,5 @@
 // ** Imports
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -77,6 +77,33 @@ app.get("/events", async (req, res) => {
     });
   }
 });
+
+// ** Delete the event
+
+app.delete("/events/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const query = {
+      _id: ObjectId(id),
+    };
+
+    const { deletedCount } = await eventCollection.deleteOne(query);
+
+    deletedCount &&
+      res.send({
+        success: true,
+        message: "Event Deleted",
+      });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// ** Update the event
 
 // ** app listen
 app.listen(port, () => {
