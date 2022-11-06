@@ -17,12 +17,24 @@ app.get("/", (req, res) => res.send(`Rostocker events server running`));
 // ** DB CONNECTION
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.7ikallh.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
+
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+
+// ** DB & Collections
+
+const eventCollection = client.db("rostockEvents").collection("events");
+
+const run = async () => {
+  try {
+    await client.connect();
+  } catch (error) {
+    console.log(error.message);
+  }
+};
 
 // ** app listen
 app.listen(port, () => {
