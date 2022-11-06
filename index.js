@@ -105,6 +105,27 @@ app.delete("/events/:id", async (req, res) => {
 
 // ** Update the event
 
+// ** get the event findOne you want to update
+
+app.get("/events/:id", async (req, res) => {
+  try {
+    const event = await eventCollection.findOne({
+      _id: ObjectId(req.params.id),
+    });
+
+    event &&
+      res.send({
+        success: true,
+        data: event,
+      });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 // ** app listen
 app.listen(port, () => {
   client.connect((err) => {
