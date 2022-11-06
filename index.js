@@ -126,6 +126,46 @@ app.get("/events/:id", async (req, res) => {
   }
 });
 
+// ** update the event
+
+app.patch("/events/:id", async (req, res) => {
+  try {
+    const filter = {
+      _id: ObjectId(req.params.id),
+    };
+
+    const { name, place, time, date, fee, guestallowed, image } = req.body;
+
+    const updatedEvent = {
+      $set: {
+        name,
+        place,
+        time,
+        date,
+        fee,
+        guestallowed,
+        image,
+      },
+    };
+
+    const result = await eventCollection.updateOne(filter, updatedEvent);
+
+    result.modifiedCount &&
+      res.send({
+        success: true,
+        data: updatedEvent,
+        message: `Event Updated`,
+      });
+
+    console.log(result);
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 // ** app listen
 app.listen(port, () => {
   client.connect((err) => {
