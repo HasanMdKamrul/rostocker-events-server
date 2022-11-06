@@ -36,6 +36,30 @@ const run = async () => {
   }
 };
 
+// ** Api end points
+// ** Creating an event
+app.post("/events", async (req, res) => {
+  try {
+    const event = req.body;
+
+    // ** Insert the event in our db
+
+    const result = await eventCollection.insertOne(event);
+
+    result.insertedId &&
+      res.send({
+        success: true,
+        message: "Event Added",
+      });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+// ** grab all the events happenning
+
 // ** app listen
 app.listen(port, () => {
   client.connect((err) => {
