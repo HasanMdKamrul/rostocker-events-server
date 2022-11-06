@@ -3,6 +3,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const { query } = require("express");
 require("dotenv").config();
 const port = process.env.PORT || 15000;
 
@@ -63,13 +64,25 @@ app.post("/events", async (req, res) => {
 
 app.get("/events", async (req, res) => {
   try {
-    const events = await eventCollection.find({}).toArray();
+    const query = {
+      email: req.query.email,
+    };
 
-    res.send({
-      success: true,
-      data: events,
-      message: "Event Retrived",
-    });
+    if (req.query.email) {
+      const events = await eventCollection.find(query).toArray();
+      res.send({
+        success: true,
+        data: events,
+        message: "Event Retrived",
+      });
+    } else {
+      const events = await eventCollection.find({}).toArray();
+      res.send({
+        success: true,
+        data: events,
+        message: "Event Retrived",
+      });
+    }
   } catch (error) {
     res.send({
       success: false,
@@ -134,7 +147,8 @@ app.patch("/events/:id", async (req, res) => {
       _id: ObjectId(req.params.id),
     };
 
-    const { name, place, time, date, fee, guestallowed, image } = req.body;
+    const { name, place, time, date, fee, guestallowed, image, email } =
+      req.body;
 
     const updatedEvent = {
       $set: {
@@ -145,6 +159,7 @@ app.patch("/events/:id", async (req, res) => {
         fee,
         guestallowed,
         image,
+        email,
       },
     };
 
