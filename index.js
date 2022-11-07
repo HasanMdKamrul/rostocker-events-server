@@ -140,10 +140,41 @@ app.get("/events", jwtVeify, async (req, res) => {
     const query = {
       email: req.query.email,
     };
-    const events = await eventCollection.find(query).toArray();
+    if (req.query.email) {
+      const events = await eventCollection.find(query).toArray();
+      const count = await eventCollection.estimatedDocumentCount();
+      return res.send({
+        success: true,
+        data: events,
+        count,
+        message: "Event Retrived",
+      });
+    }
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+// ** practice all events route created
+app.get("/allevents", async (req, res) => {
+  try {
+    const currentPage = +req.query.currentPage;
+    const dataPerPage = +req.query.size;
+
+    console.log(currentPage, dataPerPage);
+
+    const cursor = eventCollection.find({});
+    const events = await cursor
+      .skip(dataPerPage * currentPage)
+      .limit(dataPerPage)
+      .toArray();
+    const count = await eventCollection.estimatedDocumentCount();
     return res.send({
       success: true,
       data: events,
+      count,
       message: "Event Retrived",
     });
   } catch (error) {
