@@ -6,10 +6,12 @@ const cors = require("cors");
 const { query } = require("express");
 require("dotenv").config();
 const port = process.env.PORT || 15000;
+const jwt = require("jsonwebtoken");
 
 // ** Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded());
 
 // ** test api endpoint
 
@@ -60,29 +62,90 @@ app.post("/events", async (req, res) => {
   }
 });
 
-// ** grab all the events happenning
+// ** jwtVeify
 
-app.get("/events", async (req, res) => {
+const jwtVeify = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  // ** checking the authheader (token avaiable or not)
+  !authHeader &&
+    res.status(401).send({
+      message: "Unauthorised access",
+    });
+
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    err &&
+      res.status(401).send({
+        message: "Unauthorised access",
+      });
+
+    req.decoded = decoded;
+
+    next();
+  });
+};
+
+// ** Task to do -->
+
+// ? 1. post req -> with the payload data /jwt -> token generator implementation -> require("crypto").randomBytes(64).toString("hex") , jwt.sign(token,secret)
+// ? 2. Pagination implimentation
+// ** currentPage , dataPerPage -> total data count has to be send to client side **
+
+// ** verifyJwt + email in the req.decoded **
+
+// ** grab all the events happenning **
+
+// ** Token generation after login **
+
+app.post("/jwt", async (req, res) => {
   try {
+    const payLoad = req.body;
+
+    console.log(payLoad);
+
+    const token = jwt.sign(payLoad, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: "1d",
+    });
+
+    console.log(token);
+
+    token &&
+      res.send({
+        success: true,
+        token: { token },
+        message: "Token generated",
+      });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.get("/events", jwtVeify, async (req, res) => {
+  try {
+    // console.log(req.query.email);
+
+    // ** now we will check je email dise ta verified but se onno joner data chasse
+
+    if (req.decoded.email !== req.query.email) {
+      return res.send({
+        success: false,
+        message: `Unauthorised access for the email ${req.query.email}`,
+      });
+    }
+
     const query = {
       email: req.query.email,
     };
-
-    if (req.query.email) {
-      const events = await eventCollection.find(query).toArray();
-      res.send({
-        success: true,
-        data: events,
-        message: "Event Retrived",
-      });
-    } else {
-      const events = await eventCollection.find({}).toArray();
-      res.send({
-        success: true,
-        data: events,
-        message: "Event Retrived",
-      });
-    }
+    const events = await eventCollection.find(query).toArray();
+    return res.send({
+      success: true,
+      data: events,
+      message: "Event Retrived",
+    });
   } catch (error) {
     res.send({
       success: false,
@@ -147,8 +210,7 @@ app.patch("/events/:id", async (req, res) => {
       _id: ObjectId(req.params.id),
     };
 
-    const { name, place, time, date, fee, guestallowed, image, email } =
-      req.body;
+    const { name, place, date, fee, image, email } = req.body;
 
     const updatedEvent = {
       $set: {
